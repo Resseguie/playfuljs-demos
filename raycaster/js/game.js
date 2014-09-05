@@ -98,12 +98,32 @@ Player.prototype.update = function(controls, map, seconds) {
   if (controls.sideRight) this.walk(-3 * seconds, map, this.direction - Math.PI/2);
 };
 
-function Map(size) {
+function Map(size, drawWeather) {
   this.size = size;
   this.wallGrid = new Uint8Array(size * size);
   this.skybox = new Bitmap('assets/deathvalley_panorama.jpg', 2000, 750);
   this.wallTexture = new Bitmap('assets/wall_texture.jpg', 1024, 1024);
-  this.light = 0;
+  this.light = 0.75;
+  this.drawWeather = drawWeather;
+  this.thunder = [];
+  this.rain;
+
+  if(this.drawWeather) {
+    // Variety of thunder
+    for(var i=1; i<=3; i++){
+      this.thunder.push(new Howl({
+        urls: ['assets/thunder'+i+'.mp3'],
+        volume: 0.8
+      }));
+    }
+
+    // Background rain
+    this.rain = new Howl({
+      urls: ['assets/rain.mp3'],
+      loop: true,
+      volume: 0.7
+    }).play();
+  }
 }
 
 Map.prototype.get = function(x, y) {
@@ -162,9 +182,20 @@ Map.prototype.cast = function(point, angle, range) {
 };
 
 Map.prototype.update = function(seconds) {
-  if (this.light > 0) this.light = Math.max(this.light - 10 * seconds, 0);
-  else if (Math.random() * 5 < seconds) this.light = 2;
+  if(this.drawWeather) {
+    if (this.light > 0.75) {
+      this.light = Math.max(this.light - 10 * seconds, 0.75);
+    } else if (Math.random() * 5 < seconds) {
+      this.light = 4;
+      this.getThunder().play();
+    }
+  }
 };
+
+Map.prototype.getThunder = function() {
+  var index = getRandomInt(0, this.thunder.length-1);
+  return this.thunder[index];
+}
 
 function Camera(canvas, resolution, focalLength) {
   this.ctx = canvas.getContext('2d');
@@ -212,14 +243,6 @@ Camera.prototype.drawColumns = function(player, map) {
   this.ctx.restore();
 };
 
-Camera.prototype.drawWeapon = function(weapon, paces) {
-  var bobX = Math.cos(paces * 2) * this.scale * 6;
-  var bobY = Math.sin(paces * 4) * this.scale * 6;
-  var left = this.width * 0.66 + bobX;
-  var top = this.height * 0.6 + bobY;
-  this.ctx.drawImage(weapon.image, left, top, weapon.width * this.scale, weapon.height * this.scale);
-};
-
 Camera.prototype.drawColumn = function(column, ray, angle, map) {
   var ctx = this.ctx;
   var texture = map.wallTexture;
@@ -231,8 +254,6 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
 
   for (var s = ray.length - 1; s >= 0; s--) {
     var step = ray[s];
-    var rainDrops = Math.pow(Math.random(), 3) * s;
-    var rain = (rainDrops > 0) && this.project(0.1, angle, step.distance);
 
     if (s === hit) {
       var textureX = Math.floor(texture.width * step.offset);
@@ -245,11 +266,25 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
       ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
       ctx.fillRect(left, wall.top, width, wall.height);
     }
+
+    if(map.drawWeather) {
+      var rainDrops = Math.pow(Math.random(), 3) * s;
+      var rain = (rainDrops > 0) && this.project(0.1, angle, step.distance);
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.15;
+      while (--rainDrops > 0) ctx.fillRect(left, Math.random() * rain.top, 1, rain.height);
+    }
+
     
-    ctx.fillStyle = '#ffffff';
-    ctx.globalAlpha = 0.15;
-    while (--rainDrops > 0) ctx.fillRect(left, Math.random() * rain.top, 1, rain.height);
   }
+};
+
+Camera.prototype.drawWeapon = function(weapon, paces) {
+  var bobX = Math.cos(paces * 2) * this.scale * 6;
+  var bobY = Math.sin(paces * 4) * this.scale * 6;
+  var left = this.width * 0.66 + bobX;
+  var top = this.height * 0.6 + bobY;
+  this.ctx.drawImage(weapon.image, left, top, weapon.width * this.scale, weapon.height * this.scale);
 };
 
 Camera.prototype.project = function(height, angle, distance) {
@@ -280,9 +315,26 @@ GameLoop.prototype.frame = function(time) {
   requestAnimationFrame(this.frame);
 };
 
+/**
+ * Returns a random number between min (inclusive) and max (exclusive)
+ */
+function getRandom(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+/**
+ * Returns a random integer between min (inclusive) and max (inclusive)
+ * Using Math.round() will give you a non-uniform distribution!
+ */
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+
+
 var display = document.getElementById('display');
 var player = new Player(15.3, -1.2, Math.PI * 0.3);
-var map = new Map(32);
+var map = new Map(32, true);
 var controls = new Controls();
 var camera = new Camera(display, MOBILE ? 160 : 320, 0.8);
 var loop = new GameLoop();
