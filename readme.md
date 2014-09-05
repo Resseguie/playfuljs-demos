@@ -5,4 +5,4 @@ me a link so I can announce it from playfuljs.com!
 
 Once you fork this repo and push to your own gh-pages branch,
 your work will be accessible at a url like
-http://yourusername.github.io/playfuljs-demos/raycaster
+http://resseguie.github.io/playfuljs-demos/raycaster
