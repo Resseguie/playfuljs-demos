@@ -9,13 +9,16 @@ function Controls() {
 
     // WASD
     87: 'forward', 83: 'backward',
-    65: 'sideLeft', 68: 'sideRight' 
+    65: 'sideLeft', 68: 'sideRight',
+
+    77: 'map'
   };
 
   this.states = {
     'forward': false, 'backward': false,
     'left': false, 'right': false,
-    'sideLeft': false, 'sideRight': false
+    'sideLeft': false, 'sideRight': false,
+    'map': false
   };
 
   document.addEventListener('keydown', this.onKey.bind(this, true), false);
@@ -69,11 +72,11 @@ function Bitmap(src, width, height) {
   this.height = height;
 }
 
-function Player(x, y, direction) {
-  this.x = x;
-  this.y = y;
-  this.direction = direction;
-  this.weapon = new Bitmap('assets/knife_hand.png', 319, 320);
+function Player(options) {
+  this.x = options.x || 15;
+  this.y = options.y || 32;
+  this.direction = options.direction || Math.PI * 1.51;
+  this.weapon = options.weapon || new Bitmap('assets/knife_hand.png', 319, 320);
   this.paces = 0;
   this.steps = 0;
   this.distanceWalked = 0;
@@ -140,6 +143,12 @@ Player.prototype.update = function(controls, map, seconds) {
   if (controls.backward) this.walk(-3 * seconds, map, this.direction);
   if (controls.sideLeft) this.walk(3 * seconds, map, this.direction - Math.PI/2);
   if (controls.sideRight) this.walk(-3 * seconds, map, this.direction - Math.PI/2);
+
+  // toggle overview map
+  if(!map.disableMap && controls.map) {
+    map.showMap = !map.showMap;
+    controls.map = false;
+  }
 };
 
 function Map(options) {
@@ -153,6 +162,8 @@ function Map(options) {
   this.lightMax = options.lightMax || 4;
   this.light = this.lightMin;
   this.weather = options.weather || false;
+  this.disableMap = options.disableMap || false;
+  this.showMap = options.showMap || false;
   
   this.thunder = [];
   this.rain;
@@ -252,6 +263,7 @@ Map.prototype.getThunder = function() {
 }
 
 function Camera(canvas, resolution, focalLength) {
+  this.canvas = canvas;
   this.ctx = canvas.getContext('2d');
   this.width = canvas.width = window.innerWidth * 0.5;
   this.height = canvas.height = window.innerHeight * 0.5;
@@ -267,6 +279,10 @@ Camera.prototype.render = function(player, map) {
   this.drawSky(player.direction, map.skybox, map.light);
   this.drawColumns(player, map);
   this.drawWeapon(player.weapon, player.paces);
+
+  if(map.showMap) {
+    this.drawMap(0, 0, this.canvas.width * 0.2, map, player);
+  }
 };
 
 Camera.prototype.drawSky = function(direction, sky, ambient) {
@@ -285,6 +301,41 @@ Camera.prototype.drawSky = function(direction, sky, ambient) {
   }
   this.ctx.restore();
 };
+
+Camera.prototype.drawMap = function(x, y, size, map, player) {
+ // Draw the map
+ var gridElementSize = size / map.size;
+ for (var xx = 0; xx < map.size; xx++) {
+   for (var yy = 0; yy < map.size; yy++) {
+     var color = map.get(xx, yy) ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)";
+     this.ctx.fillStyle = color;
+     this.ctx.fillRect(x + xx * gridElementSize, y + yy * gridElementSize, gridElementSize, gridElementSize);
+   }
+ }
+ // Draw the player field of view 
+ var playerSize = gridElementSize * 0.7;
+ var halfPlayerSize = playerSize * 0.5;
+ var halfFOV = this.focalLength * 0.5;
+ var sin = Math.sin(player.direction - halfFOV);
+ var cos = Math.cos(player.direction - halfFOV);
+ var range = this.range * gridElementSize;
+ this.ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+ this.ctx.beginPath();
+ xx = x + player.x * gridElementSize;
+ yy = y + player.y * gridElementSize;
+ this.ctx.moveTo(xx, yy);
+ this.ctx.lineTo(xx + cos * range, yy + sin * range);
+ sin = Math.sin(player.direction + halfFOV);
+ cos = Math.cos(player.direction + halfFOV);
+ this.ctx.lineTo(xx + cos * range, yy + sin * range);
+ this.ctx.closePath();
+ this.ctx.fill();
+ this.ctx.arc(xx, yy, range, player.direction + halfFOV, player.direction - halfFOV, true);
+ this.ctx.fill();
+ // Draw the player
+ this.ctx.fillStyle = "red";
+ this.ctx.fillRect(x + player.x * gridElementSize - halfPlayerSize, y + player.y * gridElementSize - halfPlayerSize, playerSize, playerSize);
+}
 
 Camera.prototype.drawColumns = function(player, map) {
   this.ctx.save();
@@ -397,9 +448,10 @@ levels.sunny = {
   lightMax: 4
 }
 
+var level = levels.stormy;
 var display = document.getElementById('display');
-var player = new Player(15.3, -1.2, Math.PI * 0.3);
-var map = new Map(levels.stormy);
+var player = new Player(level);
+var map = new Map(level);
 var controls = new Controls();
 var camera = new Camera(display, MOBILE ? 160 : 320, 0.8);
 var loop = new GameLoop();
