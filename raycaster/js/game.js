@@ -345,38 +345,38 @@ Camera.prototype.drawSky = function(direction, sky, ambient) {
 };
 
 Camera.prototype.drawMap = function(x, y, size, map, player) {
- // Draw the map
- var gridElementSize = size / map.size;
- for (var xx = 0; xx < map.size; xx++) {
-   for (var yy = 0; yy < map.size; yy++) {
-     var color = map.get(xx, yy) ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)";
-     this.ctx.fillStyle = color;
-     this.ctx.fillRect(x + xx * gridElementSize, y + yy * gridElementSize, gridElementSize, gridElementSize);
-   }
- }
- // Draw the player field of view 
- var playerSize = gridElementSize * 0.7;
- var halfPlayerSize = playerSize * 0.5;
- var halfFOV = this.focalLength * 0.5;
- var sin = Math.sin(player.direction - halfFOV);
- var cos = Math.cos(player.direction - halfFOV);
- var range = this.range * gridElementSize;
- this.ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
- this.ctx.beginPath();
- xx = x + player.x * gridElementSize;
- yy = y + player.y * gridElementSize;
- this.ctx.moveTo(xx, yy);
- this.ctx.lineTo(xx + cos * range, yy + sin * range);
- sin = Math.sin(player.direction + halfFOV);
- cos = Math.cos(player.direction + halfFOV);
- this.ctx.lineTo(xx + cos * range, yy + sin * range);
- this.ctx.closePath();
- this.ctx.fill();
- this.ctx.arc(xx, yy, range, player.direction + halfFOV, player.direction - halfFOV, true);
- this.ctx.fill();
- // Draw the player
- this.ctx.fillStyle = "red";
- this.ctx.fillRect(x + player.x * gridElementSize - halfPlayerSize, y + player.y * gridElementSize - halfPlayerSize, playerSize, playerSize);
+  // Draw the map
+  var gridElementSize = size / map.size;
+  for (var xx = 0; xx < map.size; xx++) {
+    for (var yy = 0; yy < map.size; yy++) {
+      var color = map.get(xx, yy) ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.5)";
+      this.ctx.fillStyle = color;
+      this.ctx.fillRect(x + xx * gridElementSize, y + yy * gridElementSize, gridElementSize, gridElementSize);
+    }
+  }
+  // Draw the player field of view 
+  var playerSize = gridElementSize * 0.7;
+  var halfPlayerSize = playerSize * 0.5;
+  var halfFOV = this.focalLength * 0.5;
+  var sin = Math.sin(player.direction - halfFOV);
+  var cos = Math.cos(player.direction - halfFOV);
+  var range = this.range * gridElementSize;
+  this.ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+  this.ctx.beginPath();
+  xx = x + player.x * gridElementSize;
+  yy = y + player.y * gridElementSize;
+  this.ctx.moveTo(xx, yy);
+  this.ctx.lineTo(xx + cos * range, yy + sin * range);
+  sin = Math.sin(player.direction + halfFOV);
+  cos = Math.cos(player.direction + halfFOV);
+  this.ctx.lineTo(xx + cos * range, yy + sin * range);
+  this.ctx.closePath();
+  this.ctx.fill();
+  this.ctx.arc(xx, yy, range, player.direction + halfFOV, player.direction - halfFOV, true);
+  this.ctx.fill();
+  // Draw the player
+  this.ctx.fillStyle = "red";
+  this.ctx.fillRect(x + player.x * gridElementSize - halfPlayerSize, y + player.y * gridElementSize - halfPlayerSize, playerSize, playerSize);
 }
 
 Camera.prototype.drawColumns = function(player, map) {
