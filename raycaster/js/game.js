@@ -514,7 +514,7 @@ for(var i = 0; i < 16; i++) {
 }
 
 
-var level = levels.simple;
+var level = levels.stormy;
 
 var display = document.getElementById('display');
 var player = new Player(level);
