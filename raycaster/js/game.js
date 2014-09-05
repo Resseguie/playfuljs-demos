@@ -75,6 +75,32 @@ function Player(x, y, direction) {
   this.direction = direction;
   this.weapon = new Bitmap('assets/knife_hand.png', 319, 320);
   this.paces = 0;
+  this.steps = 0;
+  this.distanceWalked = 0;
+  this.lastStep = 0;
+  this.isWalking = false;
+
+  this.footsteps = [];
+  this.footsteps.push(new Howl({
+    urls: ['assets/footstep00.ogg'],
+    volume:0.3
+  }));
+  this.footsteps.push(new Howl({
+    urls: ['assets/footstep01.ogg'],
+    volume:0.3
+  }));
+  this.breathing = new Howl({
+    urls: ['assets/breathing.mp3'],
+    volume: 0.15
+  });
+
+  // Start the breathing
+  var that = this;
+  var _playBreathing = function(){
+    that.breathing.play();
+    setTimeout(_playBreathing,4900);
+  };
+  _playBreathing();
 }
 
 Player.prototype.rotate = function(angle) {
@@ -87,6 +113,24 @@ Player.prototype.walk = function(distance, map, direction) {
   if (map.get(this.x + dx, this.y) <= 0) this.x += dx;
   if (map.get(this.x, this.y + dy) <= 0) this.y += dy;
   this.paces += distance;
+  this.distanceWalked += Math.abs(distance);
+
+  // modify SFX while walking
+  clearTimeout(this.stopWalking);
+  this.breathing.volume(0.3);
+  this.isWalking = true;
+
+  var that = this;
+  this.stopWalking = setTimeout(function() {
+    that.breathing.fadeOut(0.15, 3000);
+    that.isWalking = false;
+  }, 150);
+
+  if(this.distanceWalked - this.lastStep > 1) {
+    this.lastStep = this.distanceWalked;
+    this.steps++;
+    this.footsteps[this.steps % 2].play();
+  }
 };
 
 Player.prototype.update = function(controls, map, seconds) {
