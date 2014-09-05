@@ -98,17 +98,22 @@ Player.prototype.update = function(controls, map, seconds) {
   if (controls.sideRight) this.walk(-3 * seconds, map, this.direction - Math.PI/2);
 };
 
-function Map(size, drawWeather) {
-  this.size = size;
-  this.wallGrid = new Uint8Array(size * size);
-  this.skybox = new Bitmap('assets/deathvalley_panorama.jpg', 2000, 750);
-  this.wallTexture = new Bitmap('assets/wall_texture.jpg', 1024, 1024);
-  this.light = 0.75;
-  this.drawWeather = drawWeather;
+function Map(options) {
+  if(!options){ options = {}; }
+
+  this.size = options.size || 32;
+  this.wallGrid = options.wallGrid || Map.randomize(this.size);
+  this.skybox = options.skybox || new Bitmap('assets/deathvalley_panorama.jpg', 2000, 750);
+  this.wallTexture = options.wallTexture ||new Bitmap('assets/wall_texture.jpg', 1024, 1024);
+  this.lightMin = options.lightMin || 0;
+  this.lightMax = options.lightMax || 4;
+  this.light = this.lightMin;
+  this.weather = options.weather || false;
+  
   this.thunder = [];
   this.rain;
 
-  if(this.drawWeather) {
+  if(this.weather) {
     // Variety of thunder
     for(var i=1; i<=3; i++){
       this.thunder.push(new Howl({
@@ -126,6 +131,16 @@ function Map(size, drawWeather) {
   }
 }
 
+Map.randomize = function(size) {
+  var length = size * size;
+  var wallGrid = new Uint8Array(length);
+  for (var i = 0; i < length; i++) {
+    wallGrid[i] = Math.random() < 0.3 ? 1 : 0;
+  }
+  return wallGrid;
+};
+
+
 Map.prototype.get = function(x, y) {
   x = Math.floor(x);
   y = Math.floor(y);
@@ -133,11 +148,6 @@ Map.prototype.get = function(x, y) {
   return this.wallGrid[y * this.size + x];
 };
 
-Map.prototype.randomize = function() {
-  for (var i = 0; i < this.size * this.size; i++) {
-    this.wallGrid[i] = Math.random() < 0.3 ? 1 : 0;
-  }
-};
 
 Map.prototype.cast = function(point, angle, range) {
   var self = this;
@@ -182,11 +192,11 @@ Map.prototype.cast = function(point, angle, range) {
 };
 
 Map.prototype.update = function(seconds) {
-  if(this.drawWeather) {
-    if (this.light > 0.75) {
-      this.light = Math.max(this.light - 10 * seconds, 0.75);
+  if(this.weather) {
+    if (this.light > this.lightMin) {
+      this.light = Math.max(this.light - 10 * seconds, this.lightMin);
     } else if (Math.random() * 5 < seconds) {
-      this.light = 4;
+      this.light = this.lightMax;
       this.getThunder().play();
     }
   }
@@ -267,7 +277,7 @@ Camera.prototype.drawColumn = function(column, ray, angle, map) {
       ctx.fillRect(left, wall.top, width, wall.height);
     }
 
-    if(map.drawWeather) {
+    if(map.weather) {
       var rainDrops = Math.pow(Math.random(), 3) * s;
       var rain = (rainDrops > 0) && this.project(0.1, angle, step.distance);
       ctx.fillStyle = '#ffffff';
@@ -319,7 +329,7 @@ GameLoop.prototype.frame = function(time) {
  * Returns a random number between min (inclusive) and max (exclusive)
  */
 function getRandom(min, max) {
-    return Math.random() * (max - min) + min;
+  return Math.random() * (max - min) + min;
 }
 
 /**
@@ -327,19 +337,28 @@ function getRandom(min, max) {
  * Using Math.round() will give you a non-uniform distribution!
  */
 function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Various map configurations
+var levels = {};
+levels.stormy = {
+  lightMin: 0.75,
+  lightMax: 4,
+  weather: true
+};
 
+levels.sunny = {
+  lightMin: 4,
+  lightMax: 4
+}
 
 var display = document.getElementById('display');
 var player = new Player(15.3, -1.2, Math.PI * 0.3);
-var map = new Map(32, true);
+var map = new Map(levels.stormy);
 var controls = new Controls();
 var camera = new Camera(display, MOBILE ? 160 : 320, 0.8);
 var loop = new GameLoop();
-
-map.randomize();
 
 loop.start(function frame(seconds) {
   map.update(seconds);
