@@ -151,9 +151,10 @@ Player.prototype.update = function(controls, map, seconds) {
   }
 };
 
-function Map(options) {
+function Map(player, options) {
   if(!options){ options = {}; }
 
+  this.player = player;
   this.size = options.size || 32;
   this.wallGrid = options.wallGrid || Map.randomize(this.size);
   this.skybox = options.skybox || new Bitmap('assets/deathvalley_panorama.jpg', 2000, 750);
@@ -165,9 +166,49 @@ function Map(options) {
   this.disableMap = options.disableMap || false;
   this.showMap = options.showMap || false;
   
+  // Spooky sound when too far away
+  this.spooky = new Howl({
+    urls: ['assets/forest.ogg'],
+    onend: function() {
+      this.spookyPlaying = false;
+    }
+  });
+  this.wolf = new Howl({
+    urls: ['assets/werewolf.mp3'],
+    volume: 0.1
+  })
+
+  this.spookyPlaying = false;
+  var that = this;
+  var _playSpooky = function(){
+    var range = MOBILE ? 8 : 14;
+    if(
+      that.player.x < -range ||
+      that.player.x > that.size + range ||
+      that.player.y < -range ||
+      that.player.y > that.size + range
+    ) {
+      console.log("out of bounds");
+      if(!that.spookyPlaying) {
+        that.spooky.volume(1);
+        that.spooky.play();
+        that.spookyPlaying = true; 
+      }
+
+      if(Math.random() > 0.7) {
+        that.wolf.play();
+      }
+    } else {
+      that.spooky.fadeOut(0,1000);
+    }
+    setTimeout(_playSpooky,5000);
+  };
+  _playSpooky();
+
   this.thunder = [];
   this.rain;
 
+  // If weather (storm) is enabled
   if(this.weather) {
     // Variety of thunder
     for(var i=1; i<=3; i++){
@@ -184,6 +225,7 @@ function Map(options) {
       volume: 0.7
     }).play();
   }
+
 }
 
 Map.randomize = function(size) {
@@ -451,7 +493,7 @@ levels.sunny = {
 var level = levels.stormy;
 var display = document.getElementById('display');
 var player = new Player(level);
-var map = new Map(level);
+var map = new Map(player, level);
 var controls = new Controls();
 var camera = new Camera(display, MOBILE ? 160 : 320, 0.8);
 var loop = new GameLoop();
