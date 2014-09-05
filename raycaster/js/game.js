@@ -73,8 +73,8 @@ function Bitmap(src, width, height) {
 }
 
 function Player(options) {
-  this.x = options.x || 15;
-  this.y = options.y || 32;
+  this.x = options.startX || 0;
+  this.y = options.startY || 0;
   this.direction = options.direction || Math.PI * 1.51;
   this.weapon = options.weapon || new Bitmap('assets/knife_hand.png', 319, 320);
   this.paces = 0;
@@ -143,12 +143,6 @@ Player.prototype.update = function(controls, map, seconds) {
   if (controls.backward) this.walk(-3 * seconds, map, this.direction);
   if (controls.sideLeft) this.walk(3 * seconds, map, this.direction - Math.PI/2);
   if (controls.sideRight) this.walk(-3 * seconds, map, this.direction - Math.PI/2);
-
-  // toggle overview map
-  if(!map.disableMap && controls.map) {
-    map.showMap = !map.showMap;
-    controls.map = false;
-  }
 };
 
 function Map(player, options) {
@@ -288,7 +282,13 @@ Map.prototype.cast = function(point, angle, range) {
   }
 };
 
-Map.prototype.update = function(seconds) {
+Map.prototype.update = function(controls, seconds) {
+  // toggle overview map
+  if(!this.disableMap && controls.map) {
+    this.showMap = !this.showMap;
+    controls.map = false;
+  }
+
   if(this.weather) {
     if (this.light > this.lightMin) {
       this.light = Math.max(this.light - 10 * seconds, this.lightMin);
@@ -482,15 +482,40 @@ var levels = {};
 levels.stormy = {
   lightMin: 0.75,
   lightMax: 4,
+  startX: 15,
+  startY: 32,
   weather: true
 };
 
 levels.sunny = {
   lightMin: 4,
-  lightMax: 4
+  lightMax: 4,
+  startX: 15,
+  startY: 32
+};
+
+levels.simple = {
+  size: 16,
+  startX: 8,
+  startY: 1,
+  direction: Math.PI * 0.5,
+  lightMin: 4,
+  lightMax: 4,
+};
+levels.simple.wallGrid = [];
+for(var i = 0; i < 16; i++) {
+  for(var j = 0; j < 16; j++) {
+    if(i === 8) {
+      levels.simple.wallGrid.push(1.5);
+    } else {
+      levels.simple.wallGrid.push(0);
+    }
+  }
 }
 
-var level = levels.stormy;
+
+var level = levels.simple;
+
 var display = document.getElementById('display');
 var player = new Player(level);
 var map = new Map(player, level);
@@ -499,7 +524,7 @@ var camera = new Camera(display, MOBILE ? 160 : 320, 0.8);
 var loop = new GameLoop();
 
 loop.start(function frame(seconds) {
-  map.update(seconds);
+  map.update(controls, seconds);
   player.update(controls.states, map, seconds);
   camera.render(player, map);
 });
