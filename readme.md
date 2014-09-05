@@ -6,3 +6,7 @@ me a link so I can announce it from playfuljs.com!
 Once you fork this repo and push to your own gh-pages branch,
 your work will be accessible at a url like
 http://resseguie.github.io/playfuljs-demos/raycaster
+
+Walk using arrow keys or WASD + mouse. Press 'm' to view overhead map.
+
+Code refactored to allow passing a level option object to map/player.
