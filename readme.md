@@ -10,3 +10,11 @@ http://resseguie.github.io/playfuljs-demos/raycaster
 Walk using arrow keys or WASD + mouse. Press 'm' to view overhead map.
 
 Code refactored to allow passing a level option object to map/player.
+
+== Credits ==
+Special thanks to ideas, code, and inspiration from:
+@hunterloftis
+@aaronfc
+@judax
+@nicmendoza
+
