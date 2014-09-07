@@ -279,7 +279,7 @@ Map.prototype.cast = function(point, angle, range) {
 };
 
 Map.prototype.update = function(controls, seconds) {
-  // toggle overview map
+  // toggle overview map if enabled
   if(!this.disableMap && controls.map) {
     this.showMap = !this.showMap;
     controls.map = false;
@@ -319,7 +319,8 @@ Camera.prototype.render = function(player, map) {
   this.drawWeapon(player.weapon, player.paces);
 
   if(map.showMap) {
-    this.drawMap(0, 0, this.canvas.width * 0.2, map, player);
+    var size = this.canvas.width * 0.2;
+    this.drawMap(this.canvas.width - size, 0, size, map, player);
   }
 };
 
@@ -535,7 +536,7 @@ var camera = new Camera(display, MOBILE ? 160 : 320, 0.8);
 var loop = new GameLoop();
 
 loop.start(function frame(seconds) {
-  map.update(controls, seconds);
+  map.update(controls.states, seconds);
   player.update(controls.states, map, seconds);
   camera.render(player, map);
 });
