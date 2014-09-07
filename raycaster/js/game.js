@@ -477,30 +477,36 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+
+
 // Various map configurations
 var levels = {};
 levels.stormy = {
+  name: "Stormy Night",
   lightMin: 0.75,
   lightMax: 4,
   startX: 15,
-  startY: 32,
+  startY: 35,
   weather: true
 };
 
-levels.sunny = {
+levels.standard = {
+  name: "Standard Maze",
   lightMin: 4,
   lightMax: 4,
   startX: 15,
-  startY: 32
+  startY: 35
 };
 
 levels.simple = {
+  name: "Simple Level",
   size: 16,
   startX: 8,
   startY: 1,
   direction: Math.PI * 0.5,
   lightMin: 4,
   lightMax: 4,
+  attempts: 1
 };
 levels.simple.wallGrid = [];
 for(var i = 0; i < 16; i++) {
@@ -514,7 +520,16 @@ for(var i = 0; i < 16; i++) {
 }
 
 
-var level = levels.stormy;
+var level;
+if(localStorage["currentLevel"] === "stormy") {
+  level = levels.stormy;
+} else if (localStorage["currentLevel"] === "standard") { 
+  level = levels.standard; 
+} else {
+  level = levels.simple;
+}
+
+document.getElementById('level-name').innerHTML = level.name;
 
 var display = document.getElementById('display');
 var player = new Player(level);
