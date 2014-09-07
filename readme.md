@@ -18,3 +18,12 @@ Special thanks to ideas, code, and inspiration from:
 @judax
 @nicmendoza
 
+SFX:
+[breathing by ceberation](http://www.freesound.org/people/ceberation/sounds/235519/)
+[footsteps by kenny](http://www.kenney.nl/)
+[rain by mark diangelo](http://soundbible.com/2065-Rain-Inside-House.html)
+[thunder by mark diangelo](http://soundbible.com/1905-Thunder-02.html)
+[thunder by mike koenig](http://soundbible.com/907-Distant-Thunder.html)
+[thunder by unknown](http://soundbible.com/302-Thunder-Clap.html)
+[spooky background by brandon morris](http://opengameart.org/content/creepy-forest-f)
+[howl by unknown](http://soundbible.com/130-Werewolf-Howl.html)
