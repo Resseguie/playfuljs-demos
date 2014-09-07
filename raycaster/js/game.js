@@ -86,24 +86,20 @@ function Player(options) {
   this.footsteps = [];
   this.footsteps.push(new Howl({
     urls: ['assets/footstep00.ogg'],
-    volume:0.3
+    volume:0.2
   }));
   this.footsteps.push(new Howl({
     urls: ['assets/footstep01.ogg'],
-    volume:0.3
+    volume:0.2
   }));
   this.breathing = new Howl({
     urls: ['assets/breathing.mp3'],
-    volume: 0.15
-  });
+    volume: 0.05,
+    onend: function() {
+      this.play();
+    }
+  }).play();
 
-  // Start the breathing
-  var that = this;
-  var _playBreathing = function(){
-    that.breathing.play();
-    setTimeout(_playBreathing,4900);
-  };
-  _playBreathing();
 }
 
 Player.prototype.rotate = function(angle) {
@@ -125,7 +121,7 @@ Player.prototype.walk = function(distance, map, direction) {
 
   var that = this;
   this.stopWalking = setTimeout(function() {
-    that.breathing.fadeOut(0.15, 3000);
+    that.breathing.fadeOut(0.1, 3000);
     that.isWalking = false;
   }, 150);
 
